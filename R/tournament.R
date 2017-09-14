@@ -19,9 +19,9 @@ play <- function(g, node = 1, series_length = 1, ...) {
     return(g)
   } else {
     children <- igraph::neighbors(g, v = node, mode = "out")
-    g1 <- play(g, node = children[1])
+    g1 <- play(g, node = children[1], series_length)
 #    cat(paste("completed left search\n"))
-    g2 <- play(g1, node = children[2])
+    g2 <- play(g1, node = children[2], series_length)
 #    cat(paste("completed right search\n"))
     l_theta <- igraph::vertex_attr(g2, "theta", index = children[1])
     r_theta <- igraph::vertex_attr(g2, "theta", index = children[2])
@@ -29,6 +29,7 @@ play <- function(g, node = 1, series_length = 1, ...) {
     r_seed <- igraph::vertex_attr(g2, "seed", index = children[2])
 
     series_prob <- series_probability(l_theta, r_theta, series_length)
+#    cat(paste(l_seed, ":", l_theta, "vs.", r_seed, ":", r_theta, "series_prob = ", series_prob, "\n"))
     if (stats::runif(1) < series_prob) {
       g2 <- g2 %>%
         igraph::set_vertex_attr("theta", index = node, value = l_theta) %>%
@@ -68,6 +69,7 @@ play <- function(g, node = 1, series_length = 1, ...) {
 #' }
 
 series_probability <- function(theta1, theta2, series_length = 1, ...) {
+#  cat(paste("series_length =", series_length, "\n"))
   p <- theta1 - theta2
   # ilogit
   bt_prob <- exp(p) / (1 + exp(p))
