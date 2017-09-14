@@ -114,20 +114,21 @@ finish_tournament <- function(g, ...) {
 #' @importFrom dplyr mutate %>%
 #' @examples
 #'
-#' n <- 8
-#' teams <- data.frame(sport = "nba", id = 1:n,
-#'                     mean_theta = sort(runif(n), decreasing = TRUE))
+#' if (require(dplyr)) {
+#' nba <- bigfour_2016 %>%
+#'   filter(sport == "nba")
 #'
-#' one_simulation(teams)
-#' one_simulation(teams, series_length = 7)
-#' one_simulation(teams, series_length = 99)
+#' one_simulation(nba)
+#' one_simulation(nba, series_length = 7)
+#' one_simulation(nba, series_length = 99)
 #'
-#' res <- many_simulations(teams, n = 10, series_length = 1)
-#' res <- many_simulations(teams, n = 10, series_length = 7)
-#'
-#' \dontrun{
-#'   res <- many_simulations(teams, n = 100, series_length = 7)
-#'   with(res, cor(seed, finish))
+#' res <- bigfour_2016 %>%
+#'   group_by(sport) %>%
+#'   do(many_simulations(., n = 10, series_length = 7))
+#
+#' res %>%
+#'   group_by(sport) %>%
+#'   summarize(cor(seed, finish))
 #' }
 #'
 
