@@ -25,18 +25,23 @@ play <- function(g, node = 1, series_length = 1, ...) {
 #    cat(paste("completed right search\n"))
     l_theta <- igraph::vertex_attr(g2, "theta", index = children[1])
     r_theta <- igraph::vertex_attr(g2, "theta", index = children[2])
+    l_alpha <- igraph::vertex_attr(g2, "alpha", index = children[1])
+    r_alpha <- igraph::vertex_attr(g2, "alpha", index = children[2])
     l_seed <- igraph::vertex_attr(g2, "seed", index = children[1])
     r_seed <- igraph::vertex_attr(g2, "seed", index = children[2])
+    alpha <- igraph::vertex_attr(g2, "alpha.sport", index = children[1])
 
-    series_prob <- series_probability(l_theta, r_theta, series_length)
+    series_prob <- series_probability(l_theta, r_theta, l_alpha, r_alpha, alpha, series_length)
 #    cat(paste(l_seed, ":", l_theta, "vs.", r_seed, ":", r_theta, "series_prob = ", series_prob, "\n"))
     if (stats::runif(1) < series_prob) {
       g2 <- g2 %>%
         igraph::set_vertex_attr("theta", index = node, value = l_theta) %>%
+        igraph::set_vertex_attr("alpha", index = node, value = l_alpha) %>%
         igraph::set_vertex_attr("seed", index = node, value = l_seed)
     } else {
       g2 <- g2 %>%
         igraph::set_vertex_attr("theta", index = node, value = r_theta) %>%
+        igraph::set_vertex_attr("theta", index = node, value = r_alpha) %>%
         igraph::set_vertex_attr("seed", index = node, value = r_seed)
     }
     return(g2)
@@ -46,6 +51,9 @@ play <- function(g, node = 1, series_length = 1, ...) {
 #' Calculate the probability of winning a series
 #' @param theta1 value of theta
 #' @param theta2 value of theta for other team
+#' @param alpha1 HFA for team1
+#' @param alpha1 HFA for team2
+#' @param alpha HFA for overall sport
 #' @param series_length number of games in the series
 #' @param ... currently ignored
 #' @importFrom stats dnbinom runif
@@ -68,14 +76,36 @@ play <- function(g, node = 1, series_length = 1, ...) {
 #'   long_run_prob(spurs_bulls, n = 10, series_length = 99)
 #' }
 
-series_probability <- function(theta1, theta2, series_length = 1, ...) {
+series_probability <- function(theta1, theta2, alpha1, alpha2, alpha, series_length = 1, ...) {
 #  cat(paste("series_length =", series_length, "\n"))
-  p <- theta1 - theta2
+  p<-rep(NA,2)
+  
+  # define a home and away probability of winning for the first team
+  p[1] <- theta1 - theta2 + alpha + alpha1
+  p[2] <- theta1 - theta2 + alpha - alpha2
+  
   # ilogit
   bt_prob <- exp(p) / (1 + exp(p))
-  win <- ceiling(series_length / 2)
+  #Max number of games played at home and away for higher seeded team
+  win <- c(ceiling(series_length / 2),floor(series_length / 2))
+  
+  #Joint distribution of games won at home and games won away.  
+  joint <- outer(dbinom(0:win[1],win[1],bt_prob[1]),dbinom(0:win[2],win[2],bt_prob[2]))
+  #name the rows and columns
+  row.names(joint)<-c(0:win[1])
+  colnames(joint)<-c(0:win[2])
+  
+  # Find the cells that we want to add up in joint
+  winMat <- matrix(NA,nrow=win[1]+1,ncol=win[2]+1)
+  for (i in 0:win[1]){winMat[i+1,]<-i}
+  for (j in 0:win[2]){winMat[,j+1]<-winMat[,j+1]+j}
+  
+  #Probability that the team associated with theta1 wins.  
+  sum(joint[winMat>=4])
+  
   # cumulative probability of fewer than `win` failures
-  sum(stats::dnbinom(0:(win - 1), win, prob = bt_prob))
+  # This assume each probability is the same for all games
+  # sum(stats::dnbinom(0:(win - 1), win, prob = bt_prob))
 }
 
 #' Seed a tournament
@@ -93,6 +123,8 @@ seed_tournament <- function(data, ...) {
   t_idx <- tournament_ordering(i)
   t <- t %>%
     set_vertex_attr("theta", index = leaves, value = data$mean_theta[t_idx]) %>%
+    set_vertex_attr("alpha", index = leaves, value = data$alpha.team[t_idx]) %>%
+    set_vertex_attr("alpha.sport", index = leaves, value = data$alpha.sport[t_idx]) %>%
     set_vertex_attr("seed", index = leaves, value = t_idx)
   return(t)
 }
