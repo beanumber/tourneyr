@@ -155,6 +155,35 @@ many_simulations <- function(data, n = 2, series_length = 1, ...) {
     dplyr::mutate(rep_id = rep(1:n, each = nrow(data)))
 }
 
+#' Calculate long run probabilities
+#' @param ... arguments passed to \code{\link{many_simulations}}
+#' @importFrom dplyr group_by_ summarize_ mutate_ filter_
+#' @export
+#' @examples
+#'
+#' parity <- data.frame(
+#'   sport = "nba",
+#'   mean_theta = c(0.01, 0)
+#' )
+#'
+#' long_run_prob(parity, n = 100, series_length = 99)
+#'
+#' if (require(dplyr) && require(tidyr)) {
+#'   bigfour_2016 %>%
+#'     group_by(sport) %>%
+#'     do(wpct = long_run_prob(., n = 10, series_length = 7)) %>%
+#'     unnest()
+#' }
+#'
+#'
+
+long_run_prob <- function(...) {
+  many_simulations(...) %>%
+    dplyr::group_by_(~seed) %>%
+    dplyr::summarize_(N = ~n(), wins = ~sum(finish == 1)) %>%
+    dplyr::mutate_(wpct = ~wins / N) %>%
+    dplyr::filter_(~seed == 1)
+}
 
 
 

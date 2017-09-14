@@ -19,7 +19,7 @@ nba <- bigfour_2016 %>%
 
 one_simulation(nba)
 one_simulation(nba, series_length = 7)
-one_simulation(nba, series_length = 99)
+one_simulation(nba, series_length = 999)
 
 res <- bigfour_2016 %>%
   group_by(sport) %>%
