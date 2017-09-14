@@ -1,0 +1,25 @@
+---
+title: "tourneyr"
+output:
+  github_document:
+    html_preview: true
+---
+
+[![Travis-CI Build Status](https://travis-ci.org/beanumber/etl.svg?branch=master)](https://travis-ci.org/beanumber/tourneyr)
+
+Simulate tournaments in R
+
+```{r}
+# devtools::install_github("beanumber/tourneyr")
+library(tourneyr)
+n <- 8
+teams <- data.frame(sport = "nba", id = 1:n,
+                   mean_theta = sort(runif(n), decreasing = TRUE))
+
+one_simulation(teams)
+one_simulation(teams, series_length = 7)
+one_simulation(teams, series_length = 99)
+
+res <- many_simulations(teams, n = 10, series_length = 1)
+res <- many_simulations(teams, n = 10, series_length = 7)
+```

@@ -103,7 +103,7 @@ finish_tournament <- function(g, ...) {
     tibble::rownames_to_column() %>%
     dplyr::mutate_(finish = ~ceiling(log2(as.numeric(rowname) + 1))) %>%
     dplyr::group_by_(~seed) %>%
-    dplyr::summarize_(theta = ~mean(theta), finish = ~min(finish), num_games = n())
+    dplyr::summarize_(theta = ~mean(theta), finish = ~min(finish), num_games = ~n())
 }
 
 #' Simulate a single tournament
