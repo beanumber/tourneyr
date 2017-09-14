@@ -8,67 +8,72 @@ Simulate tournaments in R
 ``` r
 # devtools::install_github("beanumber/tourneyr")
 library(tourneyr)
-n <- 8
-teams <- data.frame(sport = "nba", id = 1:n,
-                    mean_theta = sort(runif(n), decreasing = TRUE))
-
-one_simulation(teams)
-```
-
-    ## # A tibble: 8 x 5
-    ##    seed      theta finish num_games  sport
-    ##   <int>      <dbl>  <dbl>     <int> <fctr>
-    ## 1     1 0.99654745      3         2    nba
-    ## 2     2 0.89734899      3         2    nba
-    ## 3     3 0.85381382      4         1    nba
-    ## 4     4 0.61697476      4         1    nba
-    ## 5     5 0.44977822      1         4    nba
-    ## 6     6 0.34013383      2         3    nba
-    ## 7     7 0.26513376      4         1    nba
-    ## 8     8 0.07781834      4         1    nba
-
-``` r
-one_simulation(teams, series_length = 7)
-```
-
-    ## # A tibble: 8 x 5
-    ##    seed      theta finish num_games  sport
-    ##   <int>      <dbl>  <dbl>     <int> <fctr>
-    ## 1     1 0.99654745      4         1    nba
-    ## 2     2 0.89734899      4         1    nba
-    ## 3     3 0.85381382      4         1    nba
-    ## 4     4 0.61697476      4         1    nba
-    ## 5     5 0.44977822      3         2    nba
-    ## 6     6 0.34013383      1         4    nba
-    ## 7     7 0.26513376      3         2    nba
-    ## 8     8 0.07781834      2         3    nba
-
-``` r
-one_simulation(teams, series_length = 99)
-```
-
-    ## # A tibble: 8 x 5
-    ##    seed      theta finish num_games  sport
-    ##   <int>      <dbl>  <dbl>     <int> <fctr>
-    ## 1     1 0.99654745      4         1    nba
-    ## 2     2 0.89734899      3         2    nba
-    ## 3     3 0.85381382      1         4    nba
-    ## 4     4 0.61697476      4         1    nba
-    ## 5     5 0.44977822      3         2    nba
-    ## 6     6 0.34013383      4         1    nba
-    ## 7     7 0.26513376      4         1    nba
-    ## 8     8 0.07781834      2         3    nba
-
-``` r
-res <- many_simulations(teams, n = 10, series_length = 1)
-res <- many_simulations(teams, n = 100, series_length = 7)
-
 library(tidyverse)
+
+nba <- bigfour_2016 %>%
+  filter(sport == "nba")
+
+one_simulation(nba)
+```
+
+    ## # A tibble: 8 x 5
+    ##    seed      theta finish num_games sport
+    ##   <int>      <dbl>  <dbl>     <int> <chr>
+    ## 1     1 0.28407551      4         1   nba
+    ## 2     2 0.25984940      1         4   nba
+    ## 3     3 0.25953228      3         2   nba
+    ## 4     4 0.23932861      2         3   nba
+    ## 5     5 0.15260894      4         1   nba
+    ## 6     6 0.11709376      4         1   nba
+    ## 7     7 0.11300606      4         1   nba
+    ## 8     8 0.09243179      3         2   nba
+
+``` r
+one_simulation(nba, series_length = 7)
+```
+
+    ## # A tibble: 8 x 5
+    ##    seed      theta finish num_games sport
+    ##   <int>      <dbl>  <dbl>     <int> <chr>
+    ## 1     1 0.28407551      3         2   nba
+    ## 2     2 0.25984940      2         3   nba
+    ## 3     3 0.25953228      4         1   nba
+    ## 4     4 0.23932861      1         4   nba
+    ## 5     5 0.15260894      4         1   nba
+    ## 6     6 0.11709376      3         2   nba
+    ## 7     7 0.11300606      4         1   nba
+    ## 8     8 0.09243179      4         1   nba
+
+``` r
+one_simulation(nba, series_length = 99)
+```
+
+    ## # A tibble: 8 x 5
+    ##    seed      theta finish num_games sport
+    ##   <int>      <dbl>  <dbl>     <int> <chr>
+    ## 1     1 0.28407551      3         2   nba
+    ## 2     2 0.25984940      4         1   nba
+    ## 3     3 0.25953228      1         4   nba
+    ## 4     4 0.23932861      4         1   nba
+    ## 5     5 0.15260894      2         3   nba
+    ## 6     6 0.11709376      4         1   nba
+    ## 7     7 0.11300606      3         2   nba
+    ## 8     8 0.09243179      4         1   nba
+
+``` r
+res <- bigfour_2016 %>%
+  group_by(sport) %>%
+  do(many_simulations(., n = 100, series_length = 7))
+
 res %>%
+  group_by(sport) %>%
   summarize(cor(seed, finish))
 ```
 
-    ## # A tibble: 1 x 1
-    ##   `cor(seed, finish)`
-    ##                 <dbl>
-    ## 1           0.3667114
+    ## # A tibble: 4 x 2
+    ##   sport `cor(seed, finish)`
+    ##   <chr>               <dbl>
+    ## 1   mlb         0.036774733
+    ## 2   nba         0.163673457
+    ## 3   nfl        -0.007251356
+    ## 4   nhl        -0.025379745
