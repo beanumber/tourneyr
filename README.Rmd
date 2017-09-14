@@ -5,7 +5,7 @@ output:
     html_preview: true
 ---
 
-[![Travis-CI Build Status](https://travis-ci.org/beanumber/etl.svg?branch=master)](https://travis-ci.org/beanumber/tourneyr)
+[![Travis-CI Build Status](https://travis-ci.org/beanumber/tourneyr.svg?branch=master)](https://travis-ci.org/beanumber/tourneyr)
 
 Simulate tournaments in R
 
@@ -14,7 +14,7 @@ Simulate tournaments in R
 library(tourneyr)
 n <- 8
 teams <- data.frame(sport = "nba", id = 1:n,
-                   mean_theta = sort(runif(n), decreasing = TRUE))
+                    mean_theta = sort(runif(n), decreasing = TRUE))
 
 one_simulation(teams)
 one_simulation(teams, series_length = 7)
