@@ -9,7 +9,7 @@ output:
 
 Simulate tournaments in R
 
-```{r}
+```{r, message=FALSE}
 # devtools::install_github("beanumber/tourneyr")
 library(tourneyr)
 n <- 8
