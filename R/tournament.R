@@ -5,7 +5,7 @@
 #' @param series_length length of each series
 #' @param ... currently ignored
 #' @importFrom igraph vertex_attr neighbors
-#' @importFrom stats dnbinom runif
+#' @importFrom stats runif
 #' @export
 #'
 #'
@@ -27,11 +27,8 @@ play <- function(g, node = 1, series_length = 1, ...) {
     r_theta <- igraph::vertex_attr(g2, "theta", index = children[2])
     l_seed <- igraph::vertex_attr(g2, "seed", index = children[1])
     r_seed <- igraph::vertex_attr(g2, "seed", index = children[2])
-    p <- l_theta - r_theta
-    bt_prob <- exp(p) / (1 + exp(p))
-    win <- ceiling(series_length / 2)
-    # cumulative probability of fewer than `win` failures
-    series_prob <- sum(stats::dnbinom(0:(win - 1), win, prob = bt_prob))
+
+    series_prob <- series_probability(l_theta, r_theta, series_length)
     if (stats::runif(1) < series_prob) {
       g2 <- g2 %>%
         igraph::set_vertex_attr("theta", index = node, value = l_theta) %>%
@@ -43,6 +40,40 @@ play <- function(g, node = 1, series_length = 1, ...) {
     }
     return(g2)
   }
+}
+
+#' Calculate the probability of winning a series
+#' @param theta1 value of theta
+#' @param theta2 value of theta for other team
+#' @param series_length number of games in the series
+#' @param ... currently ignored
+#' @importFrom stats dnbinom runif
+#' @export
+#' @examples
+#' if (require(dplyr)) {
+#'   spurs_bulls <- bigfour_2016 %>%
+#'     filter(sport == "nba", season == 10,
+#'            team_id %in% c(27, 5))
+#'
+#'   # should be around 54%
+#'   series_probability(spurs_bulls$mean_theta[1], spurs_bulls$mean_theta[2], 1)
+#'   long_run_prob(spurs_bulls, n = 10)
+#'
+#'   series_probability(spurs_bulls$mean_theta[1], spurs_bulls$mean_theta[2], 7)
+#'   long_run_prob(spurs_bulls, n = 10, series_length = 7)
+#'
+#'   # should be nearly certain
+#'   series_probability(spurs_bulls$mean_theta[1], spurs_bulls$mean_theta[2], 99)
+#'   long_run_prob(spurs_bulls, n = 10, series_length = 99)
+#' }
+
+series_probability <- function(theta1, theta2, series_length = 1, ...) {
+  p <- theta1 - theta2
+  # ilogit
+  bt_prob <- exp(p) / (1 + exp(p))
+  win <- ceiling(series_length / 2)
+  # cumulative probability of fewer than `win` failures
+  sum(stats::dnbinom(0:(win - 1), win, prob = bt_prob))
 }
 
 #' Seed a tournament
