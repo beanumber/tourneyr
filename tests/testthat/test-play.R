@@ -17,6 +17,13 @@ test_that("play works", {
       mean_theta = c(0.01, 0)
     )
 
+    expect_equal(series_probability(0, 0, series_length = 1), 0.5)
+    expect_equal(series_probability(1, 1, series_length = 1), 0.5)
+    expect_equal(series_probability(-1, -1, series_length = 1), 0.5)
+    expect_gt(series_probability(0.0001, 0, series_length = 1), 0.5)
+    expect_gt(series_probability(1, 0, series_length = 1), 0.73)
+    expect_gt(series_probability(1, 0, series_length = 7), series_probability(1, 0, series_length = 1))
+
     expect_gt(long_run_prob(dominant, n = 100, series_length = 1)$wpct, 0.5)
     expect_gt(long_run_prob(dominant, n = 100, series_length = 99)$wpct, 0.9)
 
