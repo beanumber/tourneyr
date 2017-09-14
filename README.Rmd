@@ -21,5 +21,9 @@ one_simulation(teams, series_length = 7)
 one_simulation(teams, series_length = 99)
 
 res <- many_simulations(teams, n = 10, series_length = 1)
-res <- many_simulations(teams, n = 10, series_length = 7)
+res <- many_simulations(teams, n = 100, series_length = 7)
+
+library(tidyverse)
+res %>%
+  summarize(cor(seed, finish))
 ```
