@@ -17,10 +17,10 @@ test_that("play works", {
       mean_theta = c(0.01, 0)
     )
 
-    expect_gt(long_run_prob(dominant, n = 100, series_length = 1), 0.5)
-    expect_gt(long_run_prob(dominant, n = 100, series_length = 99), 0.9)
+    expect_gt(long_run_prob(dominant, n = 100, series_length = 1)$wpct, 0.5)
+    expect_gt(long_run_prob(dominant, n = 100, series_length = 99)$wpct, 0.9)
 
-    expect_gte(long_run_prob(parity, n = 100, series_length = 1), 0.5)
-    expect_gt(long_run_prob(parity, n = 100, series_length = 999999), 0.9)
+    expect_gte(long_run_prob(parity, n = 100, series_length = 1)$wpct, 0.5)
+    expect_gte(long_run_prob(parity, n = 100, series_length = 999999)$wpct, 0.9)
   }
 })
