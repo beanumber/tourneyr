@@ -32,7 +32,7 @@ play <- function(g, node = 1, series_length = 1, ...) {
     win <- ceiling(series_length / 2)
     # cumulative probability of fewer than `win` failures
     series_prob <- sum(stats::dnbinom(0:(win - 1), win, prob = bt_prob))
-    if (stats::runif(1) < bt_prob) {
+    if (stats::runif(1) < series_prob) {
       g2 <- g2 %>%
         igraph::set_vertex_attr("theta", index = node, value = l_theta) %>%
         igraph::set_vertex_attr("seed", index = node, value = l_seed)
@@ -57,7 +57,6 @@ seed_tournament <- function(data, ...) {
   num_games <- n - 1
   t <- igraph::make_tree(num_games + n)
   leaves <- igraph::degree(t, mode = "out") == 0
-  # need to add tournament ordering
   t_idx <- tournament_ordering(i)
   t <- t %>%
     set_vertex_attr("theta", index = leaves, value = data$mean_theta[t_idx]) %>%
