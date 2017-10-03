@@ -2,7 +2,7 @@ context("play works")
 
 test_that("play works", {
   if (require(dplyr)) {
-    nba <- bigfour_2016 %>%
+    nba <- bigfour_end %>%
       filter(sport == "nba")
     expect_s3_class(nba, "tbl_df")
     expect_equal(nrow(nba), nrow(one_simulation(nba)))

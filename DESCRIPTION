@@ -1,7 +1,9 @@
 Package: tourneyr
 Title: Simulate Tournaments
-Version: 0.0.0.9003
-Authors@R: person("Benjamin", "Baumer", email = "ben.baumer@gmail.com", role = c("aut", "cre"))
+Version: 0.0.0.9004
+Authors@R: c(
+    person("Ben", "Baumer", email = "ben.baumer@gmail.com", role = c("aut", "cre")), 
+    person("Gregory", "Matthews", email = "gjm112@gmail.com", role = c("aut")))
 Description: What the package does (one paragraph).
 Depends: R (>= 3.4.1)
 Imports:

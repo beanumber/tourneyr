@@ -14,8 +14,8 @@ Simulate tournaments in R
 library(tourneyr)
 library(tidyverse)
 
-nba <- bigfour_2016 %>%
-  filter(sport == "nba")
+nba <- bigfour_end %>%
+  filter(sport == "nba", season == 10)
 
 one_simulation(nba)
 one_simulation(nba, series_length = 7)

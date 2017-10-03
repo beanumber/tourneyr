@@ -52,7 +52,7 @@ play <- function(g, node = 1, series_length = 1, ...) {
 #' @param theta1 value of theta
 #' @param theta2 value of theta for other team
 #' @param alpha1 HFA for team1
-#' @param alpha1 HFA for team2
+#' @param alpha2 HFA for team2
 #' @param alpha HFA for overall sport
 #' @param series_length number of games in the series
 #' @param ... currently ignored
@@ -60,53 +60,81 @@ play <- function(g, node = 1, series_length = 1, ...) {
 #' @export
 #' @examples
 #' if (require(dplyr)) {
-#'   spurs_bulls <- bigfour_2016 %>%
-#'     filter(sport == "nba", season == 10,
-#'            team_id %in% c(27, 5))
 #'
 #'   # should be around 54%
-#'   series_probability(spurs_bulls$mean_theta[1], spurs_bulls$mean_theta[2], 1)
+#'   series_probability(spurs_bulls$mean_theta[1], spurs_bulls$mean_theta[2],
+#'                      spurs_bulls$mean_alpha[1], spurs_bulls$mean_alpha[2],
+#'                      spurs_bulls$alpha_sport[1], series_length = 1)
 #'   long_run_prob(spurs_bulls, n = 10)
 #'
-#'   series_probability(spurs_bulls$mean_theta[1], spurs_bulls$mean_theta[2], 7)
+#'   series_probability(spurs_bulls$mean_theta[1], spurs_bulls$mean_theta[2],
+#'                      spurs_bulls$mean_alpha[1], spurs_bulls$mean_alpha[2],
+#'                      spurs_bulls$alpha_sport[1], series_length = 7)
 #'   long_run_prob(spurs_bulls, n = 10, series_length = 7)
 #'
 #'   # should be nearly certain
-#'   series_probability(spurs_bulls$mean_theta[1], spurs_bulls$mean_theta[2], 99)
+#'   series_probability(spurs_bulls$mean_theta[1], spurs_bulls$mean_theta[2],
+#'                      spurs_bulls$mean_alpha[1], spurs_bulls$mean_alpha[2],
+#'                      spurs_bulls$alpha_sport[1], series_length = 99)
 #'   long_run_prob(spurs_bulls, n = 10, series_length = 99)
 #' }
 
 series_probability <- function(theta1, theta2, alpha1, alpha2, alpha, series_length = 1, ...) {
 #  cat(paste("series_length =", series_length, "\n"))
-  p<-rep(NA,2)
-  
+  p <- rep(NA, 2)
+
   # define a home and away probability of winning for the first team
   p[1] <- theta1 - theta2 + alpha + alpha1
   p[2] <- theta1 - theta2 + alpha - alpha2
-  
+
   # ilogit
   bt_prob <- exp(p) / (1 + exp(p))
-  #Max number of games played at home and away for higher seeded team
-  win <- c(ceiling(series_length / 2),floor(series_length / 2))
-  
-  #Joint distribution of games won at home and games won away.  
-  joint <- outer(dbinom(0:win[1],win[1],bt_prob[1]),dbinom(0:win[2],win[2],bt_prob[2]))
-  #name the rows and columns
-  row.names(joint)<-c(0:win[1])
-  colnames(joint)<-c(0:win[2])
-  
+  # Max number of games played at home and away for higher seeded team
+  win <- c(ceiling(series_length / 2), floor(series_length / 2))
+
+  # Joint distribution of games won at home and games won away.
+  joint <- outer(stats::dbinom(0:win[1], win[1], bt_prob[1]),
+                 stats::dbinom(0:win[2], win[2], bt_prob[2]))
+
   # Find the cells that we want to add up in joint
-  winMat <- matrix(NA,nrow=win[1]+1,ncol=win[2]+1)
-  for (i in 0:win[1]){winMat[i+1,]<-i}
-  for (j in 0:win[2]){winMat[,j+1]<-winMat[,j+1]+j}
-  
-  #Probability that the team associated with theta1 wins.  
-  sum(joint[winMat>=4])
-  
+  #Probability that the team associated with theta1 wins.
+  sum(joint[row(joint) + col(joint) - 2 >= win[1]])
+
   # cumulative probability of fewer than `win` failures
   # This assume each probability is the same for all games
   # sum(stats::dnbinom(0:(win - 1), win, prob = bt_prob))
 }
+
+#' @rdname series_probability
+#' @export
+#' @examples
+#'
+#' # Spurs at home, single game
+#' series_probability_df(arrange(spurs_bulls, desc(mean_theta)), 1)
+#'
+#' # Bulls at home, seven game series
+#' series_probability_df(spurs_bulls, 7)
+#'
+#' # Bulls at home, 99 game series
+#' series_probability_df(spurs_bulls, 99)
+#'
+#' # monotonic increase for Spurs
+#' sapply(seq(1, 15, by = 2), series_probability_df,
+#'        data = arrange(spurs_bulls, desc(mean_theta)))
+#'
+#' # monotonic decrease for Bulls
+#' sapply(seq(1, 15, by = 2), series_probability_df,
+#'        data = spurs_bulls)
+
+series_probability_df <- function(data, series_length = 1, ...) {
+  if (nrow(data) != 2) {
+    error("data frame must have exactly two rows")
+  }
+  series_probability(data$mean_theta[1], data$mean_theta[2],
+                     data$mean_alpha[1], data$mean_alpha[2],
+                     data$alpha_sport[1], series_length = series_length)
+}
+
 
 #' Seed a tournament
 #' @param data a data frame

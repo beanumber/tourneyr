@@ -2,14 +2,24 @@
 % Please edit documentation in R/tournament.R
 \name{series_probability}
 \alias{series_probability}
+\alias{series_probability_df}
 \title{Calculate the probability of winning a series}
 \usage{
-series_probability(theta1, theta2, series_length = 1, ...)
+series_probability(theta1, theta2, alpha1, alpha2, alpha, series_length = 1,
+  ...)
+
+series_probability_df(data, series_length = 1, ...)
 }
 \arguments{
 \item{theta1}{value of theta}
 
 \item{theta2}{value of theta for other team}
+
+\item{alpha1}{HFA for team1}
+
+\item{alpha2}{HFA for team2}
+
+\item{alpha}{HFA for overall sport}
 
 \item{series_length}{number of games in the series}
 
@@ -20,19 +30,30 @@ Calculate the probability of winning a series
 }
 \examples{
 if (require(dplyr)) {
-  spurs_bulls <- bigfour_2016 \%>\%
-    filter(sport == "nba", season == 10,
-           team_id \%in\% c(27, 5))
 
   # should be around 54\%
-  series_probability(spurs_bulls$mean_theta[1], spurs_bulls$mean_theta[2], 1)
+  series_probability(spurs_bulls$mean_theta[1], spurs_bulls$mean_theta[2],
+                     spurs_bulls$mean_alpha[1], spurs_bulls$mean_alpha[2],
+                     spurs_bulls$alpha_sport[1], series_length = 1)
   long_run_prob(spurs_bulls, n = 10)
 
-  series_probability(spurs_bulls$mean_theta[1], spurs_bulls$mean_theta[2], 7)
+  series_probability(spurs_bulls$mean_theta[1], spurs_bulls$mean_theta[2],
+                     spurs_bulls$mean_alpha[1], spurs_bulls$mean_alpha[2],
+                     spurs_bulls$alpha_sport[1], series_length = 7)
   long_run_prob(spurs_bulls, n = 10, series_length = 7)
 
   # should be nearly certain
-  series_probability(spurs_bulls$mean_theta[1], spurs_bulls$mean_theta[2], 99)
+  series_probability(spurs_bulls$mean_theta[1], spurs_bulls$mean_theta[2],
+                     spurs_bulls$mean_alpha[1], spurs_bulls$mean_alpha[2],
+                     spurs_bulls$alpha_sport[1], series_length = 13)
   long_run_prob(spurs_bulls, n = 10, series_length = 99)
 }
+
+series_probability_df(arrange(spurs_bulls, desc(mean_theta)), 1)
+series_probability_df(spurs_bulls, 7)
+series_probability_df(spurs_bulls, 99)
+sapply(seq(1, 15, by = 2), series_probability_df,
+       data = arrange(spurs_bulls, desc(mean_theta)))
+sapply(seq(1, 15, by = 2), series_probability_df,
+       data = spurs_bulls)
 }
