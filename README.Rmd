@@ -14,14 +14,14 @@ Simulate tournaments in R
 library(tourneyr)
 library(tidyverse)
 
-nba <- bigfour_end %>%
-  filter(sport == "nba", season == 10)
+nba <- best16_2016 %>%
+  filter(sport == "nba")
 
 one_simulation(nba)
 one_simulation(nba, series_length = 7)
 one_simulation(nba, series_length = 999)
 
-res <- bigfour_2016 %>%
+res <- best16_2016 %>%
   group_by(sport) %>%
   do(many_simulations(., n = 100, series_length = 7))
 

@@ -29,7 +29,7 @@ play <- function(g, node = 1, series_length = 1, ...) {
     r_alpha <- igraph::vertex_attr(g2, "alpha", index = children[2])
     l_seed <- igraph::vertex_attr(g2, "seed", index = children[1])
     r_seed <- igraph::vertex_attr(g2, "seed", index = children[2])
-    alpha <- igraph::vertex_attr(g2, "alpha.sport", index = children[1])
+    alpha <- igraph::vertex_attr(g2, "alpha_sport", index = children[1])
 
     series_prob <- series_probability(l_theta, r_theta, l_alpha, r_alpha, alpha, series_length)
 #    cat(paste(l_seed, ":", l_theta, "vs.", r_seed, ":", r_theta, "series_prob = ", series_prob, "\n"))
@@ -37,12 +37,14 @@ play <- function(g, node = 1, series_length = 1, ...) {
       g2 <- g2 %>%
         igraph::set_vertex_attr("theta", index = node, value = l_theta) %>%
         igraph::set_vertex_attr("alpha", index = node, value = l_alpha) %>%
-        igraph::set_vertex_attr("seed", index = node, value = l_seed)
+        igraph::set_vertex_attr("seed", index = node, value = l_seed) %>%
+        igraph::set_vertex_attr("alpha_sport", index = node, value = alpha)
     } else {
       g2 <- g2 %>%
         igraph::set_vertex_attr("theta", index = node, value = r_theta) %>%
-        igraph::set_vertex_attr("theta", index = node, value = r_alpha) %>%
-        igraph::set_vertex_attr("seed", index = node, value = r_seed)
+        igraph::set_vertex_attr("alpha", index = node, value = r_alpha) %>%
+        igraph::set_vertex_attr("seed", index = node, value = r_seed) %>%
+        igraph::set_vertex_attr("alpha_sport", index = node, value = alpha)
     }
     return(g2)
   }
@@ -81,11 +83,10 @@ play <- function(g, node = 1, series_length = 1, ...) {
 
 series_probability <- function(theta1, theta2, alpha1, alpha2, alpha, series_length = 1, ...) {
 #  cat(paste("series_length =", series_length, "\n"))
-  p <- rep(NA, 2)
 
   # define a home and away probability of winning for the first team
-  p[1] <- theta1 - theta2 + alpha + alpha1
-  p[2] <- theta1 - theta2 + alpha - alpha2
+  p <- c(theta1 - theta2 + alpha + alpha1,
+         theta1 - theta2 + alpha - alpha2)
 
   # ilogit
   bt_prob <- exp(p) / (1 + exp(p))
@@ -106,6 +107,7 @@ series_probability <- function(theta1, theta2, alpha1, alpha2, alpha, series_len
 }
 
 #' @rdname series_probability
+#' @param data a data frame like \code{\link{bigfour_end}}
 #' @export
 #' @examples
 #'
@@ -128,7 +130,7 @@ series_probability <- function(theta1, theta2, alpha1, alpha2, alpha, series_len
 
 series_probability_df <- function(data, series_length = 1, ...) {
   if (nrow(data) != 2) {
-    error("data frame must have exactly two rows")
+    stop("data frame must have exactly two rows")
   }
   series_probability(data$mean_theta[1], data$mean_theta[2],
                      data$mean_alpha[1], data$mean_alpha[2],
@@ -151,8 +153,8 @@ seed_tournament <- function(data, ...) {
   t_idx <- tournament_ordering(i)
   t <- t %>%
     set_vertex_attr("theta", index = leaves, value = data$mean_theta[t_idx]) %>%
-    set_vertex_attr("alpha", index = leaves, value = data$alpha.team[t_idx]) %>%
-    set_vertex_attr("alpha.sport", index = leaves, value = data$alpha.sport[t_idx]) %>%
+    set_vertex_attr("alpha", index = leaves, value = data$mean_alpha[t_idx]) %>%
+    set_vertex_attr("alpha_sport", index = leaves, value = data$alpha_sport[t_idx]) %>%
     set_vertex_attr("seed", index = leaves, value = t_idx)
   return(t)
 }
@@ -208,14 +210,16 @@ finish_tournament <- function(g, ...) {
 #' @examples
 #'
 #' if (require(dplyr)) {
-#' nba <- bigfour_2016 %>%
-#'   filter(sport == "nba")
+#' nba <- bigfour_end %>%
+#'   filter(sport == "nba", season == 10) %>%
+#'   arrange(desc(mean_theta)) %>%
+#'   head(16)
 #'
 #' one_simulation(nba)
 #' one_simulation(nba, series_length = 7)
 #' one_simulation(nba, series_length = 99)
 #'
-#' res <- bigfour_2016 %>%
+#' res <- best16_2016 %>%
 #'   group_by(sport) %>%
 #'   do(many_simulations(., n = 10, series_length = 7))
 #
@@ -256,13 +260,15 @@ many_simulations <- function(data, n = 2, series_length = 1, ...) {
 #'
 #' parity <- data.frame(
 #'   sport = "nba",
-#'   mean_theta = c(0.01, 0)
+#'   mean_theta = c(0.01, 0),
+#'   mean_alpha = c(0, 0),
+#'   alpha_sport = 0
 #' )
 #'
 #' long_run_prob(parity, n = 100, series_length = 99)
 #'
 #' if (require(dplyr) && require(tidyr)) {
-#'   bigfour_2016 %>%
+#'   best16_2016 %>%
 #'     group_by(sport) %>%
 #'     do(wpct = long_run_prob(., n = 10, series_length = 7)) %>%
 #'     unnest()

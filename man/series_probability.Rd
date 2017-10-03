@@ -24,6 +24,8 @@ series_probability_df(data, series_length = 1, ...)
 \item{series_length}{number of games in the series}
 
 \item{...}{currently ignored}
+
+\item{data}{a data frame like \code{\link{bigfour_end}}}
 }
 \description{
 Calculate the probability of winning a series
@@ -45,15 +47,24 @@ if (require(dplyr)) {
   # should be nearly certain
   series_probability(spurs_bulls$mean_theta[1], spurs_bulls$mean_theta[2],
                      spurs_bulls$mean_alpha[1], spurs_bulls$mean_alpha[2],
-                     spurs_bulls$alpha_sport[1], series_length = 13)
+                     spurs_bulls$alpha_sport[1], series_length = 99)
   long_run_prob(spurs_bulls, n = 10, series_length = 99)
 }
 
+# Spurs at home, single game
 series_probability_df(arrange(spurs_bulls, desc(mean_theta)), 1)
+
+# Bulls at home, seven game series
 series_probability_df(spurs_bulls, 7)
+
+# Bulls at home, 99 game series
 series_probability_df(spurs_bulls, 99)
+
+# monotonic increase for Spurs
 sapply(seq(1, 15, by = 2), series_probability_df,
        data = arrange(spurs_bulls, desc(mean_theta)))
+
+# monotonic decrease for Bulls
 sapply(seq(1, 15, by = 2), series_probability_df,
        data = spurs_bulls)
 }

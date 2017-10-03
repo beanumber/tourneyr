@@ -26,14 +26,16 @@ Simulate many tournaments
 \examples{
 
 if (require(dplyr)) {
-nba <- bigfour_2016 \%>\%
-  filter(sport == "nba")
+nba <- bigfour_end \%>\%
+  filter(sport == "nba", season == 10) \%>\%
+  arrange(desc(mean_theta)) \%>\%
+  head(16)
 
 one_simulation(nba)
 one_simulation(nba, series_length = 7)
 one_simulation(nba, series_length = 99)
 
-res <- bigfour_2016 \%>\%
+res <- best16_2016 \%>\%
   group_by(sport) \%>\%
   do(many_simulations(., n = 10, series_length = 7))
 res \%>\%

@@ -16,13 +16,15 @@ Calculate long run probabilities
 
 parity <- data.frame(
   sport = "nba",
-  mean_theta = c(0.01, 0)
+  mean_theta = c(0.01, 0),
+  mean_alpha = c(0, 0),
+  alpha_sport = 0
 )
 
 long_run_prob(parity, n = 100, series_length = 99)
 
 if (require(dplyr) && require(tidyr)) {
-  bigfour_2016 \%>\%
+  best16_2016 \%>\%
     group_by(sport) \%>\%
     do(wpct = long_run_prob(., n = 10, series_length = 7)) \%>\%
     unnest()
