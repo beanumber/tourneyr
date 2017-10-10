@@ -6,6 +6,8 @@
 #' @param ... currently ignored
 #' @importFrom igraph vertex_attr neighbors
 #' @importFrom stats runif
+#' @importFrom dplyr arrange_
+#' @importFrom utils head tail
 #' @export
 #'
 #'
@@ -26,7 +28,7 @@ play <- function(g, node = 1, series_length = 1, ...) {
     node_attr <- igraph::vertex_attr(g2, index = children) %>%
       as.data.frame() %>%
     # higher theta should always have HFA
-      arrange(seed)
+      dplyr::arrange_(~seed)
 #    l_theta <- igraph::vertex_attr(g2, "theta", index = children[1])
 #    r_theta <- igraph::vertex_attr(g2, "theta", index = children[2])
 #    l_alpha <- igraph::vertex_attr(g2, "alpha", index = children[1])
@@ -39,9 +41,9 @@ play <- function(g, node = 1, series_length = 1, ...) {
 #    cat(series_prob)
 #    cat(paste(l_seed, ":", l_theta, "vs.", r_seed, ":", r_theta, "series_prob = ", series_prob, "\n"))
     if (stats::runif(1) < series_prob) {
-      winner <- head(node_attr, 1)
+      winner <- utils::head(node_attr, 1)
     } else {
-      winner <- tail(node_attr, 1)
+      winner <- utils::tail(node_attr, 1)
     }
     g2 <- g2 %>%
       igraph::set_vertex_attr("theta", index = node, value = winner$theta) %>%
