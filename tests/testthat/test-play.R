@@ -7,20 +7,41 @@ test_that("play works", {
     expect_s3_class(nba, "tbl_df")
     expect_equal(nrow(nba), nrow(one_simulation(nba)))
 
+    x <- spurs_bulls %>%
+      rename(theta = mean_theta, alpha = mean_alpha)
     expect_true(
       all(
         sapply(seq(1, 99, by = 2), series_probability_df,
-               data = arrange(spurs_bulls, desc(mean_theta))) %>%
+               data = arrange(x, desc(theta))) %>%
         diff() > 0
       )
     )
     expect_true(
       all(
         sapply(seq(1, 99, by = 2), series_probability_df,
-               data = spurs_bulls) %>%
+               data = arrange(x, theta)) %>%
           diff() < 0
       )
     )
+
+    y <- bigfour_end %>%
+      filter(sport == "nba" & season == 4) %>%
+      arrange(desc(mean_theta)) %>%
+      head(4)
+
+    if (FALSE) {
+      # check that 2 seed outperforms 3 seed
+      many_simulations(y, n = 100, series_length = 7) %>%
+        group_by(seed) %>%
+        summarize(N = n(), mean_finish = mean(finish)) %>%
+        pull(mean_finish) %>%
+        diff() > 0
+    }
+
+
+
+
+
 
     dominant <- data.frame(
       sport = "nba",

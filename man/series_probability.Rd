@@ -33,7 +33,7 @@ Calculate the probability of winning a series
 \examples{
 if (require(dplyr)) {
 
-  # should be around 54\%
+  # should be around 40\%
   series_probability(spurs_bulls$mean_theta[1], spurs_bulls$mean_theta[2],
                      spurs_bulls$mean_alpha[1], spurs_bulls$mean_alpha[2],
                      spurs_bulls$alpha_sport[1], series_length = 1)
@@ -52,19 +52,26 @@ if (require(dplyr)) {
 }
 
 # Spurs at home, single game
-series_probability_df(arrange(spurs_bulls, desc(mean_theta)), 1)
+if (require(dplyr)) {
+  x <- spurs_bulls \%>\%
+    rename(theta = mean_theta, alpha = mean_alpha) \%>\%
+    arrange(desc(theta))
 
-# Bulls at home, seven game series
-series_probability_df(spurs_bulls, 7)
+  series_probability_df(x, 1)
+  series_probability_df(arrange(x, theta), 1)
 
-# Bulls at home, 99 game series
-series_probability_df(spurs_bulls, 99)
+  # Spurs at home, seven game series
+  series_probability_df(x, 7)
 
-# monotonic increase for Spurs
-sapply(seq(1, 15, by = 2), series_probability_df,
-       data = arrange(spurs_bulls, desc(mean_theta)))
+  # Spurs at home, 99 game series
+  series_probability_df(x, 99)
 
-# monotonic decrease for Bulls
-sapply(seq(1, 15, by = 2), series_probability_df,
-       data = spurs_bulls)
+  # monotonic increase for Spurs
+  sapply(seq(1, 15, by = 2), series_probability_df,
+         data = x)
+
+  # monotonic decrease for Bulls
+  sapply(seq(1, 15, by = 2), series_probability_df,
+         data = arrange(x, theta))
+}
 }

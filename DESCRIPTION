@@ -1,6 +1,6 @@
 Package: tourneyr
 Title: Simulate Tournaments
-Version: 0.0.0.9005
+Version: 0.0.0.9006
 Authors@R: c(
     person("Ben", "Baumer", email = "ben.baumer@gmail.com", role = c("aut", "cre")), 
     person("Gregory", "Matthews", email = "gjm112@gmail.com", role = c("aut")))

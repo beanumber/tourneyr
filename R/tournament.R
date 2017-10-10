@@ -23,29 +23,31 @@ play <- function(g, node = 1, series_length = 1, ...) {
 #    cat(paste("completed left search\n"))
     g2 <- play(g1, node = children[2], series_length)
 #    cat(paste("completed right search\n"))
-    l_theta <- igraph::vertex_attr(g2, "theta", index = children[1])
-    r_theta <- igraph::vertex_attr(g2, "theta", index = children[2])
-    l_alpha <- igraph::vertex_attr(g2, "alpha", index = children[1])
-    r_alpha <- igraph::vertex_attr(g2, "alpha", index = children[2])
-    l_seed <- igraph::vertex_attr(g2, "seed", index = children[1])
-    r_seed <- igraph::vertex_attr(g2, "seed", index = children[2])
-    alpha <- igraph::vertex_attr(g2, "alpha_sport", index = children[1])
+    node_attr <- igraph::vertex_attr(g2, index = children) %>%
+      as.data.frame() %>%
+    # higher theta should always have HFA
+      arrange(seed)
+#    l_theta <- igraph::vertex_attr(g2, "theta", index = children[1])
+#    r_theta <- igraph::vertex_attr(g2, "theta", index = children[2])
+#    l_alpha <- igraph::vertex_attr(g2, "alpha", index = children[1])
+#    r_alpha <- igraph::vertex_attr(g2, "alpha", index = children[2])
+#    l_seed <- igraph::vertex_attr(g2, "seed", index = children[1])
+#    r_seed <- igraph::vertex_attr(g2, "seed", index = children[2])
+#    alpha <- igraph::vertex_attr(g2, "alpha_sport", index = children[1])
 
-    series_prob <- series_probability(l_theta, r_theta, l_alpha, r_alpha, alpha, series_length)
+    series_prob <- series_probability_df(node_attr, series_length)
+#    cat(series_prob)
 #    cat(paste(l_seed, ":", l_theta, "vs.", r_seed, ":", r_theta, "series_prob = ", series_prob, "\n"))
     if (stats::runif(1) < series_prob) {
-      g2 <- g2 %>%
-        igraph::set_vertex_attr("theta", index = node, value = l_theta) %>%
-        igraph::set_vertex_attr("alpha", index = node, value = l_alpha) %>%
-        igraph::set_vertex_attr("seed", index = node, value = l_seed) %>%
-        igraph::set_vertex_attr("alpha_sport", index = node, value = alpha)
+      winner <- head(node_attr, 1)
     } else {
-      g2 <- g2 %>%
-        igraph::set_vertex_attr("theta", index = node, value = r_theta) %>%
-        igraph::set_vertex_attr("alpha", index = node, value = r_alpha) %>%
-        igraph::set_vertex_attr("seed", index = node, value = r_seed) %>%
-        igraph::set_vertex_attr("alpha_sport", index = node, value = alpha)
+      winner <- tail(node_attr, 1)
     }
+    g2 <- g2 %>%
+      igraph::set_vertex_attr("theta", index = node, value = winner$theta) %>%
+      igraph::set_vertex_attr("alpha", index = node, value = winner$alpha) %>%
+      igraph::set_vertex_attr("seed", index = node, value = winner$seed) %>%
+      igraph::set_vertex_attr("alpha_sport", index = node, value = winner$alpha)
     return(g2)
   }
 }
@@ -63,7 +65,7 @@ play <- function(g, node = 1, series_length = 1, ...) {
 #' @examples
 #' if (require(dplyr)) {
 #'
-#'   # should be around 54%
+#'   # should be around 40%
 #'   series_probability(spurs_bulls$mean_theta[1], spurs_bulls$mean_theta[2],
 #'                      spurs_bulls$mean_alpha[1], spurs_bulls$mean_alpha[2],
 #'                      spurs_bulls$alpha_sport[1], series_length = 1)
@@ -112,28 +114,35 @@ series_probability <- function(theta1, theta2, alpha1, alpha2, alpha, series_len
 #' @examples
 #'
 #' # Spurs at home, single game
-#' series_probability_df(arrange(spurs_bulls, desc(mean_theta)), 1)
+#' if (require(dplyr)) {
+#'   x <- spurs_bulls %>%
+#'     rename(theta = mean_theta, alpha = mean_alpha) %>%
+#'     arrange(desc(theta))
 #'
-#' # Bulls at home, seven game series
-#' series_probability_df(spurs_bulls, 7)
+#'   series_probability_df(x, 1)
+#'   series_probability_df(arrange(x, theta), 1)
 #'
-#' # Bulls at home, 99 game series
-#' series_probability_df(spurs_bulls, 99)
+#'   # Spurs at home, seven game series
+#'   series_probability_df(x, 7)
 #'
-#' # monotonic increase for Spurs
-#' sapply(seq(1, 15, by = 2), series_probability_df,
-#'        data = arrange(spurs_bulls, desc(mean_theta)))
+#'   # Spurs at home, 99 game series
+#'   series_probability_df(x, 99)
 #'
-#' # monotonic decrease for Bulls
-#' sapply(seq(1, 15, by = 2), series_probability_df,
-#'        data = spurs_bulls)
+#'   # monotonic increase for Spurs
+#'   sapply(seq(1, 15, by = 2), series_probability_df,
+#'          data = x)
+#'
+#'   # monotonic decrease for Bulls
+#'   sapply(seq(1, 15, by = 2), series_probability_df,
+#'          data = arrange(x, theta))
+#' }
 
 series_probability_df <- function(data, series_length = 1, ...) {
   if (nrow(data) != 2) {
     stop("data frame must have exactly two rows")
   }
-  series_probability(data$mean_theta[1], data$mean_theta[2],
-                     data$mean_alpha[1], data$mean_alpha[2],
+  series_probability(data$theta[1], data$theta[2],
+                     data$alpha[1], data$alpha[2],
                      data$alpha_sport[1], series_length = series_length)
 }
 
